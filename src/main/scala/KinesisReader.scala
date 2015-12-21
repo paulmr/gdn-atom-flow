@@ -1,73 +1,68 @@
 package kinesisreader
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.kinesis.AmazonKinesisClient
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory
-import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason
 import com.amazonaws.services.kinesis.model.GetRecordsRequest
 import com.amazonaws.services.kinesis.model.Record
 import com.typesafe.config.Config
 import java.util.{ UUID, List => JList }
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
-import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{
-  Worker,
-  KinesisClientLibConfiguration,
-  InitialPositionInStream
-}
+import scala.collection.JavaConversions._
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 class KinesisReader(appConfig: Config) {
 
-  class EventProcessor extends IRecordProcessor {
-    def initialize(shardId: String) = {
-      println(s"SHARDID: $shardId")
-    }
-    def processRecords(records: JList[Record], checkpointer: IRecordProcessorCheckpointer) = {
-      println(s"Records: ${records.size()}")
-    }
-    def shutdown(checkpointer: IRecordProcessorCheckpointer, reason: ShutdownReason) = {
-      println(s"Shutdown $reason")
-    }
+
+  private lazy val credentials = new BasicAWSCredentials(
+    appConfig.getString("kinesis.accessKey"),
+    appConfig.getString("kinesis.secretKey")
+  )
+
+  lazy val region = Region.getRegion(
+    Regions.fromName(appConfig.getString("kinesis.region"))
+  )
+
+  private lazy val kinesisClient = {
+    val c = new AmazonKinesisClient(credentials)
+    c.setRegion(region)
+    c
   }
 
   val appName = appConfig.getString("kinesis.appname")
 
-  val streamName: String = appConfig.getString(s"kinesis.streamName")
+  val streamName: String = appConfig.getString("kinesis.streamName")
 
-  private lazy val credentialsProvider = new DefaultAWSCredentialsProviderChain
+  //private val workerId = UUID.randomUUID().toString
 
-  private val workerId = UUID.randomUUID().toString
 
-  /* only applies when there are no checkpoints */
-  val initialPosition = InitialPositionInStream.TRIM_HORIZON
 
-  private val config =
-    new KinesisClientLibConfiguration(appName, streamName, credentialsProvider, workerId)
-      .withInitialPositionInStream(initialPosition)
-      .withRegionName(appConfig.getString("kinesis.region"))
 
-  private lazy val eventProcessorFactory = new IRecordProcessorFactory {
-    def createProcessor(): IRecordProcessor = new EventProcessor
-  }
 
-  /* Create a worker, which will in turn create one or more EventProcessors */
-  lazy val worker = new Worker(
-    eventProcessorFactory,
-    config
-  )
-
-  // def shardIterator = {
-  //   val streamInfo = kinesisClient.describeStream(streamName)
-  //   val shard = streamInfo.getStreamDescription().getShards.toList.head
-  //   kinesisClient.getShardIterator(streamName, shard.getShardId, "TRIM_HORIZON").getShardIterator
+  // def start: Unit = {
+  //   println("PMR start")
+  //   workerThread.start
+  //   println("PMR sleep")
+  //   Thread.sleep(1000)
+  //   println("PMR stop")
+  //   worker.shutdown
   // }
+
+  def shardIterator = {
+    val streamInfo = kinesisClient.describeStream(streamName)
+    val shard = streamInfo.getStreamDescription().getShards.toList.head
+    kinesisClient.getShardIterator(streamName, shard.getShardId, "TRIM_HORIZON").getShardIterator
+  }
 
   // def getStreams: List[String] =
   //   kinesisClient.listStreams().getStreamNames().toList
 
-  // def getRecords: List[Record] =
-  //   kinesisClient.getRecords(new GetRecordsRequest().withShardIterator(shardIterator)).getRecords().toList
-
+  def getRecords = {
+    kinesisClient.getRecords(new GetRecordsRequest().withShardIterator(shardIterator)).getRecords().toList
+  }
 }
+
+// object KinesisReader {
+//   def apply(config: Config)(handler: (Record) => Unit) = new KinesisReader(config, handler)
+// }
