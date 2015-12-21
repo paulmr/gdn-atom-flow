@@ -17,7 +17,6 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{
   KinesisClientLibConfiguration,
   InitialPositionInStream
 }
-import net.ceedubs.ficus.Ficus._
 
 class KinesisReader(appConfig: Config) {
 
@@ -33,9 +32,9 @@ class KinesisReader(appConfig: Config) {
     }
   }
 
-  val appName = appConfig.getAs[String]("kinesis.appname").get
+  val appName = appConfig.getString("kinesis.appname")
 
-  val streamName: String = appConfig.getAs[String]("kinesis.streamName").get
+  val streamName: String = appConfig.getString(s"kinesis.streamName")
 
   private lazy val credentialsProvider = new DefaultAWSCredentialsProviderChain
 
@@ -44,10 +43,10 @@ class KinesisReader(appConfig: Config) {
   /* only applies when there are no checkpoints */
   val initialPosition = InitialPositionInStream.TRIM_HORIZON
 
-  private lazy val config =
+  private val config =
     new KinesisClientLibConfiguration(appName, streamName, credentialsProvider, workerId)
       .withInitialPositionInStream(initialPosition)
-      .withRegionName(appConfig.getAs[String]("kinesis.region").getOrElse("eu-west-1"))
+      .withRegionName(appConfig.getString("kinesis.region"))
 
   private lazy val eventProcessorFactory = new IRecordProcessorFactory {
     def createProcessor(): IRecordProcessor = new EventProcessor
