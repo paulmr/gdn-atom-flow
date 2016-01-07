@@ -8,12 +8,13 @@ import scala.concurrent.duration.{ Duration, SECONDS }
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import com.gu.contentatom.thrift
+import atomflow.store._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /* simple cli tool */
 
-class AtomFlow(config: Config) extends Thread
+class AtomFlow[Id](config: Config, val store: Store[Id]) extends Thread
     with RecordProcessor
     with LazyLogging {
 
