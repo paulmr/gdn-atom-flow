@@ -13,7 +13,8 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-simple" % "1.7.13",
   "com.twitter" %% "scrooge-core" % "3.17.0",
   "com.gu" %% "content-atom-model-scala" % "0.2.1",
-  "com.gu" %% "content-atom-util" % "0.2.1-SNAPSHOT"
+  "com.gu" %% "content-atom-util" % "0.2.1-SNAPSHOT",
+  "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 )
 
 //   "com.amazonaws" % "amazon-kinesis-client" % "1.2.1",
