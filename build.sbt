@@ -12,7 +12,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
   "org.slf4j" % "slf4j-simple" % "1.7.13",
   "com.twitter" %% "scrooge-core" % "3.17.0",
-  "com.gu" %% "content-atom-model-scala" % "0.2.1"
+  "com.gu" %% "content-atom-model-scala" % "0.2.1",
+  "com.gu" %% "content-atom-util" % "0.2.1-SNAPSHOT"
 )
 
 //   "com.amazonaws" % "amazon-kinesis-client" % "1.2.1",

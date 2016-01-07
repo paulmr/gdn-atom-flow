@@ -1,9 +1,10 @@
-package kinesisreader
+package atomflow
 
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.kinesis.AmazonKinesisClient
-import com.amazonaws.services.kinesis.model.GetRecordsRequest
-import com.amazonaws.services.kinesis.model.Record
+import com.amazonaws.services.kinesis.model.{
+  GetRecordsRequest, GetShardIteratorRequest, Record
+}
 import com.typesafe.config.Config
 import java.util.{ UUID, List => JList }
 import com.amazonaws.regions.Region
@@ -15,13 +16,11 @@ import java.nio.ByteBuffer
 
 class KinesisReader(appConfig: Config) {
 
-  sealed trait IteratorType { val value: String }
-  object IteratorType {
-    object Latest extends IteratorType { val value = "LATEST" }
-    object All extends IteratorType    { val value = "TRIM_HORIZON" }
-  }
-
-  case class GetRecordsResponse(nextIterator: String, records: List[Record])
+  case class GetRecordsResponse(
+    nextIterator: String,
+    sequenceNum: Option[String], // will be None if no records returned
+    records: List[Record]
+  )
 
   private lazy val credentials = new BasicAWSCredentials(
     appConfig.getString("kinesis.accessKey"),
@@ -42,15 +41,37 @@ class KinesisReader(appConfig: Config) {
 
   val streamName: String = appConfig.getString("kinesis.streamName")
 
-  def newIterator(iteratorType: IteratorType): String = {
+  private def requestIterator(startReq: GetShardIteratorRequest) = {
     val streamInfo = kinesisClient.describeStream(streamName)
     val shard = streamInfo.getStreamDescription().getShards.toList.head
-    kinesisClient.getShardIterator(streamName, shard.getShardId, iteratorType.value).getShardIterator
+    val req = startReq
+        .withStreamName(streamName)
+        .withShardId(shard.getShardId)
+    kinesisClient.getShardIterator(req).getShardIterator
   }
+
+  def newIteratorAll(): String = requestIterator(
+    new GetShardIteratorRequest().withShardIteratorType("TRIM_HORIZON")
+  )
+
+  def newIteratorLatest(): String = requestIterator(
+    new GetShardIteratorRequest().withShardIteratorType("LATEST")
+  )
+
+  def newIteratorFrom(startSeq: String): String = requestIterator(
+    new GetShardIteratorRequest()
+      .withShardIteratorType("AFTER_SEQUENCE_NUMBER")
+      .withStartingSequenceNumber(startSeq)
+  )
 
   def getRecords(it: String): GetRecordsResponse = {
     val res = kinesisClient.getRecords(new GetRecordsRequest().withShardIterator(it))
-    GetRecordsResponse(res.getNextShardIterator(), res.getRecords().toList)
+    val recs = res.getRecords().toList
+    GetRecordsResponse(
+      res.getNextShardIterator(),
+      recs.lastOption.map(_.getSequenceNumber()),
+      recs
+    )
   }
 
   def waitForRecords(delay: Duration, it: String)(implicit ec: ExecutionContext):
