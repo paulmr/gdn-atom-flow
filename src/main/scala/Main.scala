@@ -1,25 +1,31 @@
 package kinesisreader
 
-import com.typesafe.config.ConfigFactory
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.duration.SECONDS
+import com.typesafe.config.ConfigFactory
+import com.typesafe.scalalogging.LazyLogging
+
+import scala.concurrent.ExecutionContext.Implicits.global
+
 /* simple cli tool */
 
-object Main extends App {
+object Main extends App with LazyLogging {
 
   val config = ConfigFactory.load()
   val kinesis = new KinesisReader(config)
 
-  println(s"Connecting to: ${kinesis.streamName}")
+  logger.info(s"Connecting to: ${kinesis.streamName}")
 
-  def go(count: Int = 0, max: Int = 10, delay: Duration = Duration(1, SECONDS)): Unit = {
-    val records = kinesis.getRecords
-    println(s"[$count] Got ${records.length}")
-    Thread.sleep(delay.toMillis)
-    if((count + 1) < max) go(count + 1, max, delay)
+  val startIt = kinesis.newIterator(kinesis.IteratorType.All)
+
+  val futureRecords = kinesis.waitForRecords(Duration(5, "seconds"), startIt)
+
+  logger.info("Waiting for records ...")
+
+  val res = Await.result(futureRecords, Duration.Inf)
+
+  res.records foreach { record =>
+    logger.info(s"Record: sent ${record.getApproximateArrivalTimestamp}")
   }
 
-  go()
 }
