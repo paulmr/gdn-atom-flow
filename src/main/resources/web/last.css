@@ -2,11 +2,22 @@ table.event-list {
     border-collapse: collapse;
 }
 
-table.event-list th,td {
+table.event-list th {
+    border: 1px solid black;
+}
+
+table.event-list td {
     border: 1px dashed black;
+}
+
+table.event-list td,th {
     padding: 5px;
 }
 
 table.event-list th {
     font-weight: bold;
+}
+
+table.event-list tr.event-OPEN {
+    background-color: yellow;
 }

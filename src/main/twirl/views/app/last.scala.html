@@ -7,11 +7,12 @@
     </head>
     <body>    
         <table class="event-list">
-            <tr><th>Atom ID</th><th>Event type</th></tr>
+            <tr><th>Atom ID</th><th>Event type</th><th>Status</th></tr>
             @for(ev <- events) {
-                       <tr>
+                       <tr class="event-@ev.status">
                            <td>@ev.atomId</td>
                            <td>@ev.eventType</td>
+                           <td>@ev.status</td>
                        </tr>
                        }
         </table>
