@@ -4,6 +4,8 @@ name := "atom-flow"
 
 version := "1.0.0-SNAPSHOT"
 
+lazy val sprayVersion = "1.3.3"
+
 libraryDependencies ++= Seq(
   "com.twitter" %% "scrooge-core" % "3.17.0",
   "org.apache.thrift" % "libthrift" % "0.9.2",
@@ -14,8 +16,11 @@ libraryDependencies ++= Seq(
   "com.twitter" %% "scrooge-core" % "3.17.0",
   "com.gu" %% "content-atom-model-scala" % "0.2.1",
   "com.gu" %% "content-atom-util" % "0.2.1-SNAPSHOT",
+  "io.spray" %% "spray-can" % sprayVersion,
+  "io.spray" %% "spray-http" % sprayVersion,
+  "io.spray" %% "spray-routing" % sprayVersion,
+  "com.typesafe.akka" %% "akka-actor" % "2.3.14",
   "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 )
 
 //   "com.amazonaws" % "amazon-kinesis-client" % "1.2.1",
-//   "com.typesafe.akka" %% "akka-actor" % "2.4.1"

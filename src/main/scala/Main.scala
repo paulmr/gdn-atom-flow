@@ -1,9 +1,22 @@
 package atomflow
 
+import akka.pattern.ask
 import atomflow.store._
 import com.typesafe.config.ConfigFactory
+import akka.actor.{ ActorSystem, Props, ActorRef }
+import akka.io.IO
+import spray.can.Http
+import akka.util.Timeout
+import scala.concurrent.duration._
+
+import api.v1._
 
 object Main extends App {
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  implicit val system = ActorSystem()
+
   val config = ConfigFactory.load()
 
   System.setProperty(
@@ -22,9 +35,10 @@ object Main extends App {
 
   atomFlowThread.start
 
-  /* XXX - DEBUG */
-  Thread.sleep(20000)
-  val contents = store.tail(10)
-  println(s"PMR store contains ${contents.length} item(s)")
-  /* XXX - END DEBUG */
+  val apiHandler = system.actorOf(Props(classOf[ApiHandler[Int]], store))
+
+  implicit val timeout = Timeout(5.seconds)
+
+  IO(Http) ? (Http.Bind(apiHandler, interface = "localhost", port = 8980))
+
 }

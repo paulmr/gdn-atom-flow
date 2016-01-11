@@ -29,6 +29,6 @@ class MemStore extends Store[Int] {
     }
 
   def tail(max: Int) = data.synchronized {
-    data.toArray.toList.reverse.take(max)
+    data.toArray.sorted.toList.reverse.take(max)
   }
 }
