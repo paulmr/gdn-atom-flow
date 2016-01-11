@@ -60,7 +60,6 @@ class AtomFlow[Id](config: Config, val store: Store[Id]) extends Thread
       // delay before we try again
       if(active) {
         val seconds = 5
-        logger.info(s"Sleeping for $seconds seconds")
         Thread.sleep(seconds * 1000)
       }
       iterator = res.nextIterator
