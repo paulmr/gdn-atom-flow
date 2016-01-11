@@ -1,0 +1,19 @@
+@import _root_.atomflow.model._
+@(events: List[Event])
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" HREF="../static/last.css" type="text/css">
+    </head>
+    <body>    
+        <table class="event-list">
+            <tr><th>Atom ID</th><th>Event type</th></tr>
+            @for(ev <- events) {
+                       <tr>
+                           <td>@ev.atomId</td>
+                           <td>@ev.eventType</td>
+                       </tr>
+                       }
+        </table>
+    </body>
+</html>

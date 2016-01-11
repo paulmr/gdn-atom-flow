@@ -26,9 +26,12 @@ object Main extends App {
   atomFlowThread.start
 
   val apiHandler = system.actorOf(Props(classOf[ApiHandler[Int]], store))
+  val webHandler = system.actorOf(Props(classOf[web.WebHandler[Int]], store))
 
   implicit val timeout = Timeout(5.seconds)
 
-  IO(Http) ? (Http.Bind(apiHandler, interface = "localhost", port = 8980))
-
+  IO(Http) ? (Http.Bind(apiHandler, interface = config.getString("app.api.host"),
+                        port = config.getInt("app.api.port")))
+  IO(Http) ? (Http.Bind(webHandler, interface = config.getString("app.api.host"),
+                        port = config.getInt("app.web.port")))
 }

@@ -1,0 +1,12 @@
+table.event-list {
+    border-collapse: collapse;
+}
+
+table.event-list th,td {
+    border: 1px dashed black;
+    padding: 5px;
+}
+
+table.event-list th {
+    font-weight: bold;
+}

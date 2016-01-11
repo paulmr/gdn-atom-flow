@@ -26,4 +26,6 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 )
 
+lazy val root = (project in file(".")).enablePlugins(SbtTwirl)
+
 //   "com.amazonaws" % "amazon-kinesis-client" % "1.2.1",
