@@ -6,7 +6,8 @@ case class Event(
   atomId: String,
   eventType: String,
   startDate: Date,
-  status: EventStatus.Value
+  status: EventStatus.Value,
+  endDate: Option[Date] = None
 )
 
 object Event {
